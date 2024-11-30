@@ -1,6 +1,7 @@
 package com.example.android_cnn_cv
 
 import android.Manifest
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 lateinit var module: Module
 
@@ -85,6 +88,7 @@ class MainActivity : ComponentActivity() {
         val executor = remember { Executors.newSingleThreadExecutor() }
         var debugText by remember { mutableStateOf("Press the button to capture an image") }
         var predictionLabel by remember { mutableStateOf("Esperando la prediccion...") }
+        var informationLabel by remember { mutableStateOf("") }
         var showCamera by remember { mutableStateOf(true) }
         var showCapturedImage by remember { mutableStateOf(false) }
         var capturedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -149,14 +153,16 @@ class MainActivity : ComponentActivity() {
 
             Text(text = debugText, modifier = Modifier.padding(all = Dp(16.0F)))
             Text(text = predictionLabel, modifier = Modifier.padding(all = Dp(16.0F)))
+            Text(text = informationLabel, modifier = Modifier.padding(all = Dp(16.0F)))
 
             if (captureButtonText == "Capture Image") {
                 Button(onClick = {
                     Log.d("CameraX", "Capture Image button clicked")
                     debugText = "Button clicked, capturing image..."
-                    captureImage(imageCaptureUseCase, executor,
+                    captureImage(context, imageCaptureUseCase, executor,
                         updateDebugText = { message -> debugText = message },
                         updatePredictionLabel = { label -> predictionLabel = label },
+                        updateInformationLabel = { label -> informationLabel = label},
                         updateCapturedImage = { bitmap ->
                             capturedImageBitmap = bitmap
                             showCamera = false
@@ -175,6 +181,7 @@ class MainActivity : ComponentActivity() {
                     captureButtonText = "Capture Image"
                     debugText = "Press the button to capture an image"
                     predictionLabel = ""
+                    informationLabel = ""
                 }) {
                     Text("Retake")
                 }
@@ -188,11 +195,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun loadNutritionInfoFromCSV(context: Context, food: String): String {
+        val result = StringBuilder()
+        try {
+            val inputStream = context.assets.open("nutrition_info.csv")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+
+            var line: String? = reader.readLine()
+            while (line != null) {
+                val parts = line.split(",")
+                if (parts[0].equals(food, ignoreCase = true)) {
+                    result.append("Nombre: ${parts[0]}\n")
+                    result.append("Categoria: ${parts[1]} kcal\n")
+                    result.append("Calorias (kcal/100g): ${parts[2]} g\n")
+                    result.append("Calorias por unidad: ${parts[3]} g\n")
+                    result.append("Indice glucemico: ${parts[4]} g\n")
+
+                    saveToLogFile(context, "log.csv", parts[0], parts[3])
+
+                    break
+                }
+                line = reader.readLine()
+            }
+            reader.close()
+        } catch (e: Exception) {
+            result.append("Error al cargar la información: ${e.message}")
+        }
+        return if (result.isEmpty()) "Información no encontrada para $food" else result.toString()
+    }
+
+    fun saveToLogFile(context: Context, fileName: String, food: String, caloriesPerUnit: String) {
+        try {
+            context.openFileOutput(fileName, Context.MODE_APPEND).use { output ->
+                val writer = output.bufferedWriter()
+                writer.write("$food,$caloriesPerUnit")
+                writer.newLine()
+                writer.flush()
+            }
+            println("Datos guardados en $fileName exitosamente.")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("Error al guardar datos en $fileName: ${e.message}")
+        }
+    }
+
     private fun captureImage(
+        context: Context,
         imageCapture: ImageCapture?,
         executor: java.util.concurrent.Executor,
         updateDebugText: (String) -> Unit,
         updatePredictionLabel: (String) -> Unit,
+        updateInformationLabel: (String) -> Unit,
         updateCapturedImage: (Bitmap) -> Unit
     ) {
         if (imageCapture == null) {
@@ -259,6 +312,8 @@ class MainActivity : ComponentActivity() {
                                 val detectedClass = classes[maxScoreIndex]
                                 Log.d("PyTorch", "Detected class: $detectedClass")
                                 updatePredictionLabel(detectedClass)
+                                val food = loadNutritionInfoFromCSV(context, detectedClass)
+                                updateInformationLabel(food)
                             }
 
                             image.close()

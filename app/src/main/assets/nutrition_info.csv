@@ -1,0 +1,82 @@
+Nombre,Categoria,Caloras Promedio (kcal/100g),Indice Glucemico (IG),Calorias Promedio por Unidad (kcal)
+aguacate,Fruta,160,15,250
+ajo,Verdura,149,10,5
+almendra india,Fruta seca,553,22,7
+arandano,Fruta,57,25,0.5
+arandano azul,Fruta,57,25,0.5
+berenjena,Verdura,25,15,80
+cacahuate,Legumbre,567,14,5
+cacao,Fruta,228,20,40
+cafe,Legumbre,2,0,1
+calabacin,Verdura,17,15,33
+calabaza,Verdura,26,75,100
+calabaza amarga,Verdura,19,15,80
+calabaza moscada,Verdura,40,55,150
+camote,Verdura,86,44,112
+caqui,Fruta,70,50,118
+carambola,Fruta,31,36,33
+cebolla,Verdura,40,10,44
+cereza,Fruta,50,22,4
+cereza negra,Fruta,63,22,5
+chile,Verdura,40,10,18
+ciruela,Fruta,46,24,30
+ciruela de playa,Fruta,50,28,25
+coco,Fruta,354,45,1405
+coliflor,Verdura,25,15,120
+durazno,Fruta,39,42,58
+durian,Fruta,147,50,357
+espinaca,Verdura,23,15,7
+frambuesa,Fruta,52,25,0.7
+fresa,Fruta,32,40,4
+granada,Fruta,83,35,234
+granadilla,Fruta,97,30,80
+granadina,Fruta,85,35,80
+grosella negra,Fruta,63,22,1
+guanabana,Fruta,66,40,600
+guayaba,Fruta,68,12,37
+guisante,Verdura,81,22,5
+higo,Fruta,74,35,47
+higo del desierto,Fruta,220,40,80
+jalapeno,Verdura,28,10,5
+jengibre,Verdura,80,15,20
+jitomate,Fruta,18,15,22
+jocote,Fruta,46,45,8
+kiwano,Fruta,44,20,209
+kiwi,Fruta,61,50,42
+lechuga,Verdura,15,10,5
+lima,Fruta,30,10,20
+limon americano,Fruta,29,20,20
+lychee,Fruta,66,50,6
+maiz,Verdura,96,52,88
+mamey,Fruta,124,45,300
+mandarina,Fruta,53,30,47
+mango,Fruta,60,55,135
+manzana,Fruta,52,36,95
+melon,Fruta,34,65,50
+melon galia,Fruta,35,65,50
+mora artica,Fruta,54,25,0.5
+nabo,Verdura,28,30,50
+naranja,Fruta,47,42,62
+nuez de brasil,Fruta seca,656,10,33
+papa,Verdura,77,82,164
+papaya,Fruta,43,60,120
+paprika,Verdura,282,10,5
+pepino,Verdura,16,15,45
+pera,Fruta,57,38,101
+pera yali,Fruta,53,34,100
+pimiento,Verdura,31,10,30
+pina,Fruta,50,66,452
+pitahaya,Fruta,50,48,200
+platano,Fruta,89,51,105
+pomelo,Fruta,42,25,52
+rabano,Verdura,16,15,1
+remolacha,Verdura,43,61,35
+repollo,Verdura,25,10,200
+sandí,Fruta,30,72,85
+soja,Legumbre,446,15,30
+toronja,Fruta,32,25,52
+tuna,Fruta,41,55,44
+uva,Fruta,69,59,3
+vainilla,Fruta,288,15,6
+zanahoria,Verdura,41,47,25
+zarzamora,Fruta,43,25,0.7
