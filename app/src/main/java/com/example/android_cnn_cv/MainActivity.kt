@@ -2,6 +2,7 @@ package com.example.android_cnn_cv
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -183,13 +184,14 @@ class MainActivity : ComponentActivity() {
                     predictionLabel = ""
                     informationLabel = ""
                 }) {
-                    Text("Retake")
+                    Text("Retomar Foto")
                 }
 
                 Button(onClick = {
-                    // Redirect to another view with the predictionLabel
+                    val intent = Intent(this@MainActivity, SecondActivity::class.java)
+                    startActivity(intent)
                 }) {
-                    Text("Go to Prediction View")
+                    Text("Boton SecondActivity")
                 }
             }
         }

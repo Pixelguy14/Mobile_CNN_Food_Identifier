@@ -20,13 +20,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Android_CNN_CV"
         tools:targetApi="31">
-        <activity
-            android:name=".InformationActivity"
-            android:exported="false" />
+        <activity android:name=".SecondActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.Android_CNN_CV">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
