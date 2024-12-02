@@ -41,6 +41,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 lateinit var module: Module
 
@@ -156,6 +159,13 @@ class MainActivity : ComponentActivity() {
             Text(text = predictionLabel, modifier = Modifier.padding(all = Dp(16.0F)))
             Text(text = informationLabel, modifier = Modifier.padding(all = Dp(16.0F)))
 
+            Button(onClick = {
+                val intent = Intent(this@MainActivity, SecondActivity::class.java)
+                startActivity(intent)
+            }) {
+                Text("View statistics")
+            }
+
             if (captureButtonText == "Capture Image") {
                 Button(onClick = {
                     Log.d("CameraX", "Capture Image button clicked")
@@ -227,17 +237,46 @@ class MainActivity : ComponentActivity() {
     }
 
     fun saveToLogFile(context: Context, fileName: String, food: String, caloriesPerUnit: String) {
+        val TAG = "LogFileDebug" // Etiqueta para los logs
         try {
-            context.openFileOutput(fileName, Context.MODE_APPEND).use { output ->
+            // Ruta completa del archivo
+            val file = File(context.filesDir, fileName)
+
+            // Formatos de fecha y hora
+            val dateFormat = SimpleDateFormat("EEEE,dd,MMMM", Locale("es", "MX"))
+            val hourFormat = SimpleDateFormat("HH", Locale("es", "MX")) // Formato de 24 horas
+            val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale("es", "MX")) // Fecha completa
+
+            val currentDate = dateFormat.format(Date()) // Fecha con día y mes
+            val currentHour = hourFormat.format(Date()) // Hora
+            val fullDate = fullDateFormat.format(Date()) // Fecha en formato YYYY-MM-DD
+
+            // Nuevo registro con la columna adicional
+            val newEntry = "$currentDate,$currentHour,$food,$caloriesPerUnit,$fullDate\n"
+
+            // Leer contenido existente si el archivo existe
+            val existingContent = if (file.exists()) {
+                context.openFileInput(fileName).bufferedReader().use { it.readText() }
+            } else {
+                ""
+            }
+
+            // Sobrescribir el archivo con el nuevo registro al principio
+            context.openFileOutput(fileName, Context.MODE_PRIVATE).use { output ->
                 val writer = output.bufferedWriter()
-                writer.write("$food,$caloriesPerUnit")
-                writer.newLine()
+                writer.write(newEntry) // Escribir nuevo registro primero
+                writer.write(existingContent) // Agregar contenido existente después
                 writer.flush()
             }
-            println("Datos guardados en $fileName exitosamente.")
+
+            Log.i(TAG, "Datos guardados en $fileName exitosamente.")
+
+            // Validar que los datos se guardaron correctamente leyendo el archivo
+            val updatedContent = context.openFileInput(fileName).bufferedReader().use { it.readText() }
+            Log.d(TAG, "Contenido actual del archivo $fileName:\n$updatedContent")
+
         } catch (e: Exception) {
-            e.printStackTrace()
-            println("Error al guardar datos en $fileName: ${e.message}")
+            Log.e(TAG, "Error al guardar datos en $fileName: ${e.message}", e)
         }
     }
 

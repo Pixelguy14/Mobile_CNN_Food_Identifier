@@ -43,6 +43,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 pytorch_android = { module = "org.pytorch:pytorch_android", version.ref = "pytorch_android" }
 pytorch_android_lite = { module = "org.pytorch:pytorch_android_lite", version.ref = "pytorch_android_lite" }
 pytorch_android_torchvision = { module = "org.pytorch:pytorch_android_torchvision", version.ref = "pytorch_android_torchvision" }
+mpandroidchart = "com.github.PhilJay:MPAndroidChart:v3.1.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
