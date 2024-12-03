@@ -39,10 +39,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.Icon
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.FileReader
+import java.io.FileWriter
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -63,7 +64,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Load the PyTorch model
+        // Cargamos el modelo de Pytorch
         try {
             val modelPath = assetFilePath("mobile_classification_model.ptl")
             Log.d("Model", "Model path: $modelPath")
@@ -182,7 +183,7 @@ class MainActivity : ComponentActivity() {
                             capturedImageBitmap = bitmap
                             showCamera = false
                             showCapturedImage = true
-                            captureButtonText = "Retomar Foto"
+                            captureButtonText = "Tomar otra foto"
                         }
                     )
                 }) {
@@ -198,34 +199,35 @@ class MainActivity : ComponentActivity() {
                     predictionLabel = ""
                     informationLabel = ""
                 }) {
-                    Text("Retomar Foto")
+                    Text("Tomar otra foto")
                 }
-                /*
-                Button(onClick = {
-                    val intent = Intent(this@MainActivity, SecondActivity::class.java)
-                    startActivity(intent)
-                }) {
-                    Text("Boton SecondActivity")
-                }
-                */
+                Text(text = "Consumirás este alimento?", modifier = Modifier.padding(all = Dp(16.0F)))
                 Row(
                     horizontalArrangement = Arrangement.Center,  // Centrar en la pantalla
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                 ) {
                     Button(
                         onClick = {
-                            captureButtonText= "Accion Boton1"
+                            val intent = Intent(this@MainActivity, SecondActivity::class.java)
+                            startActivity(intent)
                         }
                     ) {
-                        Text("Boton1")
+                        Text("Si")
                     }
                     Spacer(modifier = Modifier.width(16.dp)) // Spacing Entre los botones
                     Button(
                         onClick = {
-                            captureButtonText= "Accion Boton2"
+                            removeNutritionInfoFromCSV(context)
+                            showCamera = true
+                            showCapturedImage = false
+                            capturedImageBitmap = null
+                            captureButtonText = "Tomar Foto"
+                            debugText = "Presiona el boton para tomar una foto"
+                            predictionLabel = ""
+                            informationLabel = ""
                         }
                     ) {
-                        Text("Boton2")
+                        Text("No")
                     }
                 }
 
@@ -262,8 +264,46 @@ class MainActivity : ComponentActivity() {
         return if (result.isEmpty()) "Información no encontrada para $food" else result.toString()
     }
 
-    fun saveToLogFile(context: Context, fileName: String, food: String, caloriesPerUnit: String) {
-        val TAG = "LogFileDebug" // Etiqueta para los logs
+    private fun removeNutritionInfoFromCSV(context: Context) {
+        val logFile = File(context.filesDir, "log.csv")
+        val tempFile = File(context.filesDir, "temp_log.csv")
+
+        try {
+            val reader = BufferedReader(FileReader(logFile))
+            val writer = BufferedWriter(FileWriter(tempFile))
+
+            var isFirstLine = true
+            var line: String?
+
+            while (reader.readLine().also { line = it } != null) {
+                if (isFirstLine) {
+                    // Saltar la primera línea (registro más reciente)
+                    isFirstLine = false
+                    continue
+                }
+                // Escribir las demás líneas en el archivo temporal
+                writer.write(line)
+                writer.newLine()
+            }
+
+            // Cerrar los streams
+            reader.close()
+            writer.close()
+
+            // Eliminar el archivo original y renombrar el archivo temporal
+            if (logFile.delete()) {
+                tempFile.renameTo(logFile)
+            } else {
+                throw IOException("No se pudo eliminar el archivo original")
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveToLogFile(context: Context, fileName: String, food: String, caloriesPerUnit: String) {
+        val tagLog = "LogFileDebug" // Etiqueta para los logs
         try {
             // Ruta completa del archivo
             val file = File(context.filesDir, fileName)
@@ -295,14 +335,14 @@ class MainActivity : ComponentActivity() {
                 writer.flush()
             }
 
-            Log.i(TAG, "Datos guardados en $fileName exitosamente.")
+            Log.i(tagLog, "Datos guardados en $fileName exitosamente.")
 
             // Validar que los datos se guardaron correctamente leyendo el archivo
             val updatedContent = context.openFileInput(fileName).bufferedReader().use { it.readText() }
-            Log.d(TAG, "Contenido actual del archivo $fileName:\n$updatedContent")
+            Log.d(tagLog, "Contenido actual del archivo $fileName:\n$updatedContent")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error al guardar datos en $fileName: ${e.message}", e)
+            Log.e(tagLog, "Error al guardar datos en $fileName: ${e.message}", e)
         }
     }
 
@@ -329,11 +369,9 @@ class MainActivity : ComponentActivity() {
                 Log.d("CameraX", "Image captured successfully")
                 updateDebugText("Imagen capturada exitosamente")
                 try {
-                    // Convert ImageProxy to Bitmap using ImageDecoder
                     val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         imageProxyToBitmap(image)
                     } else {
-                        // Fallback for older versions if needed
                         val buffer: ByteBuffer = image.planes[0].buffer
                         val bytes = ByteArray(buffer.remaining())
                         buffer.get(bytes)
@@ -341,13 +379,12 @@ class MainActivity : ComponentActivity() {
                     }
                     Log.d("CameraX", "Converted ImageProxy to Bitmap")
                     updateDebugText("Convertida ImageProxy a Bitmap")
-                    updateCapturedImage(bitmap) // Update UI with captured image
+                    updateCapturedImage(bitmap)
 
-                    // Create a mutable copy of the bitmap with ARGB_8888 configuration
+                    // Creamos una copia del bitmap con una configuracion ARGB
                     val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
                     Log.d("CameraX", "Copied Bitmap to mutable bitmap with ARGB_8888 configuration")
 
-                    // Run inference on a background thread
                     executor.execute {
                         try {
                             val resizedBitmap = Bitmap.createScaledBitmap(mutableBitmap, 100, 100, true)
@@ -355,12 +392,11 @@ class MainActivity : ComponentActivity() {
 
                             val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
                                 resizedBitmap,
-                                floatArrayOf(0.0f, 0.0f, 0.0f), // Mean normalization set to zero
+                                floatArrayOf(0.0f, 0.0f, 0.0f), // Normalizacion en zeros
                                 floatArrayOf(1.0f, 1.0f, 1.0f)
                             )
                             Log.d("CameraX", "Input Tensor shape: ${inputTensor.shape().contentToString()}")
 
-                            // Log the first few values to verify content
                             val inputTensorData = inputTensor.dataAsFloatArray
                             Log.d("CameraX", "Input Tensor first 10 values: ${inputTensorData.take(10).joinToString()}")
 

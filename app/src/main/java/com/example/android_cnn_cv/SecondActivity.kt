@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.graphics.Color
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -43,7 +42,7 @@ class SecondActivity : ComponentActivity() {
         val csvData = readCsvFile(applicationContext)
         val dailyGroupedData = filterDataForTodayAndGroup(csvData)
         val weeklyGroupedData = filterDataForLastSevenDaysAndGroup(csvData)
-        val monthlyGroupedData = filterDataForCurentMonthAndGroup(csvData)
+        val monthlyGroupedData = filterDataForCurrentMonthAndGroup(csvData)
         val dailyBarEntries = convertIntGroupedDataToBarEntries(dailyGroupedData)
         val weeklyBarEntries = convertStringGroupedDataToBarEntries(weeklyGroupedData)
         val monthlyBarEntries = convertIntGroupedDataToBarEntries(monthlyGroupedData)
@@ -79,7 +78,6 @@ fun readCsvFile(context: Context): List<String> {
         lines.add(it)
     }
 
-    // Imprimir las líneas para verificar
     println("Contenido por línea del archivo CSV:")
     lines.forEach { line ->
         println(line) // Imprime cada línea del archivo
@@ -108,9 +106,7 @@ fun filterDataForTodayAndGroup(csvData: List<String>): Map<Int, Int> {
 
     val groupedCalories = mutableMapOf(0 to 0, 1 to 0, 2 to 0, 3 to 0, 4 to 0, 5 to 0)
 
-    // Iterar sobre cada línea del CSV
     csvData.forEach { line ->
-        // Parsear los datos del CSV
         val parts = line.split(",")
         if (parts.size >= 6) {
             val day = parts[1].toIntOrNull() ?: 0
@@ -136,7 +132,6 @@ fun filterDataForTodayAndGroup(csvData: List<String>): Map<Int, Int> {
 }
 
 fun filterDataForLastSevenDaysAndGroup(csvData: List<String>): Map<String, Int> {
-    // Parsear todas las fechas del CSV
     val dates = mutableSetOf<String>()
     csvData.forEach { line ->
         val parts = line.split(",")
@@ -146,7 +141,6 @@ fun filterDataForLastSevenDaysAndGroup(csvData: List<String>): Map<String, Int> 
         }
     }
 
-    // Ordenar las fechas en orden ascendente (más antiguas primero) y tomar las últimas 7
     val sortedDates = dates.sorted().takeLast(7)
 
     // Agrupar las calorías por fecha
@@ -155,7 +149,6 @@ fun filterDataForLastSevenDaysAndGroup(csvData: List<String>): Map<String, Int> 
         groupedCalories[date] = 0 // Inicializamos el valor con 0
     }
 
-    // Iterar sobre cada línea del CSV y agrupar las calorías por fecha
     csvData.forEach { line ->
         val parts = line.split(",")
         if (parts.size >= 7) {
@@ -172,14 +165,11 @@ fun filterDataForLastSevenDaysAndGroup(csvData: List<String>): Map<String, Int> 
     return groupedCalories
 }
 
-fun filterDataForCurentMonthAndGroup(csvData: List<String>): Map<Int, Int> {
-    // Obtener la fecha de hoy en el formato "d,MM,yyyy" (día, mes, año)
+fun filterDataForCurrentMonthAndGroup(csvData: List<String>): Map<Int, Int> {
     val month = getCurrentMonth()
     val groupedCalories = mutableMapOf(0 to 0, 1 to 0, 2 to 0, 3 to 0)
 
-    // Iterar sobre cada línea del CSV
     csvData.forEach { line ->
-        // Parsear los datos del CSV
         val parts = line.split(",")
         if (parts.size >= 6) {
             val day = parts[1].toIntOrNull() ?: 0
@@ -202,7 +192,7 @@ fun filterDataForCurentMonthAndGroup(csvData: List<String>): Map<Int, Int> {
 
 fun convertIntGroupedDataToBarEntries(groupedData: Map<Int, Int>): List<BarEntry> {
     return groupedData.map { (range, calories) ->
-        BarEntry(range.toFloat(), calories.toFloat()) // Crear BarEntry para cada intervalo
+        BarEntry(range.toFloat(), calories.toFloat())
     }
 }
 
@@ -213,12 +203,11 @@ fun convertStringGroupedDataToBarEntries(groupedData: Map<String, Int>): List<Ba
 }
 
 fun extractXLabelsFromGroupedData(groupedData: Map<String, Int>): List<String> {
-    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) // Formato original de las fechas
-    val outputFormat = SimpleDateFormat("dd-MMM", Locale.getDefault()) // Formato deseado
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("dd-MMM", Locale.getDefault())
 
     return groupedData.keys.map { date ->
         try {
-            // Parsear la fecha desde el formato original
             val parsedDate = inputFormat.parse(date)
             // Formatear la fecha al nuevo formato
             outputFormat.format(parsedDate ?: date)
@@ -232,13 +221,12 @@ fun extractXLabelsFromGroupedData(groupedData: Map<String, Int>): List<String> {
 @Composable
 fun SecondScreen(dailyBarEntries: List<BarEntry>, weeklyBarEntries: List<BarEntry>, xLabels: List<String>, monthlyBarEntries: List<BarEntry> ,onBackClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Botón de retroceso
         Button(onClick = onBackClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "Regresar"
             )
-            Text(" Capturar comida")
+            Text(" Capturar alimento")
         }
 
         Text("")
@@ -281,13 +269,11 @@ fun BarChartView(
     label: String,
     barColor: Int,
     xLabels: List<String>,
-    modifier: Modifier = Modifier // Agregar el parámetro de modifier
+    modifier: Modifier = Modifier
 ) {
 
-// Define colores según el valor y las condiciones de xLabels
     val colors = entries.map { entry ->
         when {
-            // Condición para la primera gráfica (primer xLabel contiene "h")
             xLabels.firstOrNull()?.contains("h", ignoreCase = true) == true -> {
                 when {
                     entry.y < 900 -> Color.parseColor("#28D809")
@@ -295,7 +281,6 @@ fun BarChartView(
                 }
             }
 
-            // Condición para la segunda gráfica (sin "h" y sin "sem")
             xLabels.firstOrNull()?.let { !it.contains("h", ignoreCase = true) && !it.contains("sem", ignoreCase = true) } == true -> {
                 when {
                     entry.y < 2400 -> Color.parseColor("#28D809")
@@ -304,7 +289,6 @@ fun BarChartView(
                 }
             }
 
-            // Condición para la tercera gráfica (primer xLabel contiene "sem")
             xLabels.firstOrNull()?.contains("sem", ignoreCase = true) == true -> {
                 when {
                     entry.y < 16800 -> Color.parseColor("#28D809")
@@ -313,20 +297,16 @@ fun BarChartView(
                 }
             }
 
-            // Condición por defecto
-            else -> Color.parseColor("#FF4500") // Naranja oscuro
+            else -> Color.parseColor("#FF4500")
         }
     }
 
-// Aplica los colores al dataset
     val dataSet = BarDataSet(entries, label).apply {
         setColors(colors)
     }
 
-    // Crear los datos
     val barData = BarData(dataSet)
 
-    // Mostrar el gráfico en Compose
     AndroidView(
         factory = { context ->
             BarChart(context).apply {
@@ -374,7 +354,7 @@ fun BarChartView(
                 this.legend.isEnabled = false
             }
         },
-        modifier = modifier // Aplicar el modifier para controlar el tamaño
+        modifier = modifier
     )
 }
 
