@@ -39,11 +39,15 @@ import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executor
 
 lateinit var module: Module
 
@@ -86,17 +90,17 @@ class MainActivity : ComponentActivity() {
     fun CameraScreen(modifier: Modifier = Modifier) {
         val context = LocalContext.current
         val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-        var previewUseCase by remember { mutableStateOf<androidx.camera.core.Preview?>(null) }
+        var previewUseCase by remember { mutableStateOf<Preview?>(null) }
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         var imageCaptureUseCase by remember { mutableStateOf<ImageCapture?>(null) }
         val executor = remember { Executors.newSingleThreadExecutor() }
-        var debugText by remember { mutableStateOf("Press the button to capture an image") }
+        var debugText by remember { mutableStateOf("Presiona el botón para capturar una Imagen") }
         var predictionLabel by remember { mutableStateOf("Esperando la prediccion...") }
         var informationLabel by remember { mutableStateOf("") }
         var showCamera by remember { mutableStateOf(true) }
         var showCapturedImage by remember { mutableStateOf(false) }
         var capturedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-        var captureButtonText by remember { mutableStateOf("Capture Image") }
+        var captureButtonText by remember { mutableStateOf("Tomar Foto") }
 
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
@@ -106,7 +110,7 @@ class MainActivity : ComponentActivity() {
                     previewView = PreviewView(context)
                     Log.d("CameraX", "PreviewView created")
 
-                    val preview = androidx.camera.core.Preview.Builder().build().also { builder ->
+                    val preview = Preview.Builder().build().also { builder ->
                         builder.surfaceProvider = previewView!!.surfaceProvider
                         Log.d("CameraX", "SurfaceProvider set")
                     }
@@ -124,15 +128,15 @@ class MainActivity : ComponentActivity() {
                         Log.d("CameraX", "Camera bound to lifecycle")
                     } catch (exc: Exception) {
                         Log.e("CameraX", "Use case binding failed", exc)
-                        debugText = "Use case binding failed: ${exc.message}"
+                        debugText = "Error al vincular: ${exc.message}"
                     }
                 } catch (exc: Exception) {
                     Log.e("CameraX", "Camera provider initialization failed", exc)
-                    debugText = "Camera provider initialization failed: ${exc.message}"
+                    debugText = "Inicializacion del Proovedor de la camara fallido: ${exc.message}"
                 }
             } else {
                 Log.e("CameraX", "Camera permission not granted")
-                debugText = "Camera permission not granted"
+                debugText = "No se otorgaron permisos de la cámara"
             }
         }
 
@@ -147,7 +151,7 @@ class MainActivity : ComponentActivity() {
                     AndroidView(factory = { previewView!! }, modifier = Modifier.weight(1f))
                 } else {
                     Log.d("CameraX", "PreviewView is null")
-                    debugText = "PreviewView is null"
+                    debugText = "No hay vista previa"
                 }
             }
 
@@ -163,13 +167,13 @@ class MainActivity : ComponentActivity() {
                 val intent = Intent(this@MainActivity, SecondActivity::class.java)
                 startActivity(intent)
             }) {
-                Text("View statistics")
+                Text("Ver las estadísticas")
             }
 
-            if (captureButtonText == "Capture Image") {
+            if (captureButtonText == "Tomar Foto") {
                 Button(onClick = {
                     Log.d("CameraX", "Capture Image button clicked")
-                    debugText = "Button clicked, capturing image..."
+                    debugText = "Tomando foto, capturando imagen..."
                     captureImage(context, imageCaptureUseCase, executor,
                         updateDebugText = { message -> debugText = message },
                         updatePredictionLabel = { label -> predictionLabel = label },
@@ -178,7 +182,7 @@ class MainActivity : ComponentActivity() {
                             capturedImageBitmap = bitmap
                             showCamera = false
                             showCapturedImage = true
-                            captureButtonText = "Retake"
+                            captureButtonText = "Retomar Foto"
                         }
                     )
                 }) {
@@ -189,20 +193,42 @@ class MainActivity : ComponentActivity() {
                     showCamera = true
                     showCapturedImage = false
                     capturedImageBitmap = null
-                    captureButtonText = "Capture Image"
-                    debugText = "Press the button to capture an image"
+                    captureButtonText = "Tomar Foto"
+                    debugText = "Presiona el boton para tomar una foto"
                     predictionLabel = ""
                     informationLabel = ""
                 }) {
                     Text("Retomar Foto")
                 }
-
+                /*
                 Button(onClick = {
                     val intent = Intent(this@MainActivity, SecondActivity::class.java)
                     startActivity(intent)
                 }) {
                     Text("Boton SecondActivity")
                 }
+                */
+                Row(
+                    horizontalArrangement = Arrangement.Center,  // Centrar en la pantalla
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            captureButtonText= "Accion Boton1"
+                        }
+                    ) {
+                        Text("Boton1")
+                    }
+                    Spacer(modifier = Modifier.width(16.dp)) // Spacing Entre los botones
+                    Button(
+                        onClick = {
+                            captureButtonText= "Accion Boton2"
+                        }
+                    ) {
+                        Text("Boton2")
+                    }
+                }
+
             }
         }
     }
@@ -262,7 +288,7 @@ class MainActivity : ComponentActivity() {
             }
 
             // Sobrescribir el archivo con el nuevo registro al principio
-            context.openFileOutput(fileName, Context.MODE_PRIVATE).use { output ->
+            context.openFileOutput(fileName, MODE_PRIVATE).use { output ->
                 val writer = output.bufferedWriter()
                 writer.write(newEntry) // Escribir nuevo registro primero
                 writer.write(existingContent) // Agregar contenido existente después
@@ -283,25 +309,25 @@ class MainActivity : ComponentActivity() {
     private fun captureImage(
         context: Context,
         imageCapture: ImageCapture?,
-        executor: java.util.concurrent.Executor,
+        executor: Executor,
         updateDebugText: (String) -> Unit,
         updatePredictionLabel: (String) -> Unit,
         updateInformationLabel: (String) -> Unit,
         updateCapturedImage: (Bitmap) -> Unit
     ) {
         if (imageCapture == null) {
-            val errorMessage = "ImageCapture use case is null"
+            val errorMessage = "el uso de ImageCapture es nulo"
             Log.e("CameraX", errorMessage)
             updateDebugText(errorMessage)
             return
         }
 
         Log.d("CameraX", "Starting image capture")
-        updateDebugText("Starting image capture")
+        updateDebugText("Iniciando captura de imagen")
         imageCapture.takePicture(ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
                 Log.d("CameraX", "Image captured successfully")
-                updateDebugText("Image captured successfully")
+                updateDebugText("Imagen capturada exitosamente")
                 try {
                     // Convert ImageProxy to Bitmap using ImageDecoder
                     val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -314,7 +340,7 @@ class MainActivity : ComponentActivity() {
                         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     }
                     Log.d("CameraX", "Converted ImageProxy to Bitmap")
-                    updateDebugText("Converted ImageProxy to Bitmap")
+                    updateDebugText("Convertida ImageProxy a Bitmap")
                     updateCapturedImage(bitmap) // Update UI with captured image
 
                     // Create a mutable copy of the bitmap with ARGB_8888 configuration
@@ -338,11 +364,11 @@ class MainActivity : ComponentActivity() {
                             val inputTensorData = inputTensor.dataAsFloatArray
                             Log.d("CameraX", "Input Tensor first 10 values: ${inputTensorData.take(10).joinToString()}")
 
-                            updateDebugText("Converted Bitmap to Tensor")
+                            updateDebugText("Bitmap convertido a Tensor")
 
                             val outputTensor = module.forward(IValue.from(inputTensor)).toTensor()
                             Log.d("CameraX", "Model inference performed")
-                            updateDebugText("Model inference performed")
+                            updateDebugText("Inferencia del modelo realizada")
 
                             val scores = outputTensor.dataAsFloatArray
                             Log.d("CameraX", "Output scores length: ${scores.size}")
@@ -359,21 +385,21 @@ class MainActivity : ComponentActivity() {
 
                             image.close()
                             Log.d("CameraX", "Image processed successfully")
-                            updateDebugText("Image processed successfully")
+                            updateDebugText("Imagen procesada exitosamente")
                         } catch (e: Exception) {
                             Log.e("CameraX", "Failed to process image", e)
-                            updateDebugText("Failed to process image: ${e.message}")
+                            updateDebugText("Fallo al procesar la imagen: ${e.message}")
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("CameraX", "Failed to process image", e)
-                    updateDebugText("Failed to process image: ${e.message}")
+                    updateDebugText("Fallo al procesar la imagen: ${e.message}")
                 }
             }
 
             override fun onError(exception: ImageCaptureException) {
                 Log.e("CameraX", "Photo capture failed: ${exception.message}", exception)
-                updateDebugText("Photo capture failed: ${exception.message}")
+                updateDebugText("Captura de la foto fallida: ${exception.message}")
             }
         })
     }

@@ -236,7 +236,7 @@ fun SecondScreen(dailyBarEntries: List<BarEntry>, weeklyBarEntries: List<BarEntr
         Button(onClick = onBackClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = "Back to MainActivity"
+                contentDescription = "Regresar"
             )
             Text(" Capturar comida")
         }
