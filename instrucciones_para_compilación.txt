@@ -1,0 +1,5 @@
+Instrucciones de uso:
+1. Descargar e instalar Android Studio desde la página de descarga oficial: https://developer.android.com/studio?hl=es-419
+2. Descargar o clonar el repositorio de GitHub https://github.com/Pixelguy14/Mobile_CNN_Food_Identifier
+3. Modificar las rutas absolutas por su equivalente en el almacenamiento actual. Estas rutas se encuentran en los archivos: .idea\gradle.xml ; .idea\migrations.xml ; .idea\vcs.xml.
+4. Utilizar un dispositivo (físico o emulado) para correr la aplicación (recomendable en dispositivo físico). Si se opta por esta opción, se debe desbloquear el modo desarrollador en el dispositivo con SO Android y conectarlo mediante USB al ordenador. Una vez hecho, se deberá activar la depuración por USB desde el dispositivo y compilar y ejecutar el proyecto con el botón de reproducir en la barra superior de Android Studio.
